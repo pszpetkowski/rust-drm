@@ -1,0 +1,10 @@
+[package]
+name = "rust-drm"
+description = "Pure Rust implementation of mesa libdrm for Linux"
+version = "0.1.0"
+license = "MIT"
+authors = ["rust-drm developers"]
+edition = "2018"
+
+[dependencies]
+regex = "1.3.1"
