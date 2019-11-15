@@ -147,8 +147,8 @@ pub fn process_device(
 
     let node_type = DrmNodeType::from_minor_name(device_name)?;
 
-    match node_type {
-        DrmNodeType::Primary => {
+    match subsystem_type {
+        DrmBus::PCI => {
             let pci_path = drm_node.get_device_path();
             let pci_slot_name = get_uevent_data_by_key(pci_path, "PCI_SLOT_NAME");
             let bus_info = BusInfo::Pci(PCIBusInfo::new(&pci_slot_name));
@@ -160,7 +160,7 @@ pub fn process_device(
                 device_info,
             ))
         }
-        _ => Err("Unsupported DRM Node Type")?,
+        _ => Err("Unsupported DRM subsystem type")?,
     }
 }
 
