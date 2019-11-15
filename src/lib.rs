@@ -51,9 +51,34 @@ pub enum BusInfo {
 pub struct PCIDeviceInfo {
     vendor_id: u16,
     device_id: u16,
+    revision_id: u8,
     subvendor_id: u16,
     subdevice_id: u16,
-    revision_id: u8,
+}
+
+impl PCIDeviceInfo {
+    fn new(drm_node: &DrmNode) -> PCIDeviceInfo {
+        let config_path = drm_node.get_config_path();
+        let mut buffer = [0; 64];
+        File::open(config_path)
+            .unwrap()
+            .read(&mut buffer[..])
+            .unwrap();
+
+        let vendor_id = buffer[0] as u16 | ((buffer[1] as u16) << 8);
+        let device_id = buffer[2] as u16 | ((buffer[3] as u16) << 8);
+        let revision_id = buffer[8];
+        let subvendor_id = buffer[44] as u16 | ((buffer[45] as u16) << 8);
+        let subdevice_id = buffer[46] as u16 | ((buffer[47] as u16) << 8);
+
+        PCIDeviceInfo {
+            vendor_id,
+            device_id,
+            revision_id,
+            subvendor_id,
+            subdevice_id,
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -70,14 +95,21 @@ pub struct DrmDevice {
     available_nodes: i32,
     bus_type: DrmBus,
     bus_info: BusInfo,
+    device_info: DeviceInfo,
 }
 
 impl DrmDevice {
-    fn new(node_type: DrmNodeType, subsystem_type: DrmBus, bus_info: BusInfo) -> DrmDevice {
+    fn new(
+        node_type: DrmNodeType,
+        subsystem_type: DrmBus,
+        bus_info: BusInfo,
+        device_info: DeviceInfo,
+    ) -> DrmDevice {
         DrmDevice {
             available_nodes: 1 << (node_type as i32),
             bus_type: subsystem_type,
             bus_info,
+            device_info,
         }
     }
 }
@@ -120,7 +152,13 @@ pub fn process_device(
             let pci_path = drm_node.get_device_path();
             let pci_slot_name = get_uevent_data_by_key(pci_path, "PCI_SLOT_NAME");
             let bus_info = BusInfo::Pci(PCIBusInfo::new(&pci_slot_name));
-            Ok(DrmDevice::new(node_type, subsystem_type, bus_info))
+            let device_info = DeviceInfo::Pci(PCIDeviceInfo::new(&drm_node));
+            Ok(DrmDevice::new(
+                node_type,
+                subsystem_type,
+                bus_info,
+                device_info,
+            ))
         }
         _ => Err("Unsupported DRM Node Type")?,
     }
@@ -132,6 +170,7 @@ mod tests {
 
     #[test]
     fn process_device_happy_path() {
-        process_device("card0", Some(DrmBus::PCI)).unwrap();
+        let device = process_device("card0", Some(DrmBus::PCI)).unwrap();
+        dbg!(device);
     }
 }
