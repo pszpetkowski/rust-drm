@@ -94,4 +94,10 @@ impl DrmNode {
         );
         Path::new(&drm_device_dir_name).canonicalize().unwrap()
     }
+
+    pub fn get_config_path(&self) -> std::path::PathBuf {
+        let drm_device_dir_name =
+            format!("/sys/dev/char/{}:{}/device/config", self.major, self.minor);
+        Path::new(&drm_device_dir_name).canonicalize().unwrap()
+    }
 }
