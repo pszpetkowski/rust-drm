@@ -34,20 +34,20 @@ impl DrmNodeType {
     /// DRM Node types:
     ///
     /// ```
-    /// let node_type = drm::DrmNodeType::from_minor_name("card0").unwrap();
-    /// assert_eq!(node_type, drm::DrmNodeType::Primary);
+    /// let node_type = rust_drm::DrmNodeType::from_minor_name("card0").unwrap();
+    /// assert_eq!(node_type, rust_drm::DrmNodeType::Primary);
     ///
-    /// let node_type = drm::DrmNodeType::from_minor_name("controlD128").unwrap();
-    /// assert_eq!(node_type, drm::DrmNodeType::Control);
+    /// let node_type = rust_drm::DrmNodeType::from_minor_name("controlD128").unwrap();
+    /// assert_eq!(node_type, rust_drm::DrmNodeType::Control);
     ///
-    /// let node_type = drm::DrmNodeType::from_minor_name("renderD128").unwrap();
-    /// assert_eq!(node_type, drm::DrmNodeType::Render);
+    /// let node_type = rust_drm::DrmNodeType::from_minor_name("renderD128").unwrap();
+    /// assert_eq!(node_type, rust_drm::DrmNodeType::Render);
     /// ```
     ///
     /// Unknown DRM Node type:
     ///
     /// ```
-    /// assert!(drm::DrmNodeType::from_minor_name("unknownD128").is_err());
+    /// assert!(rust_drm::DrmNodeType::from_minor_name("unknownD128").is_err());
     /// ```
     pub fn from_minor_name(name: &str) -> Result<DrmNodeType> {
         match name {
