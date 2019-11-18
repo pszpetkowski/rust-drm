@@ -1,118 +1,16 @@
 mod core;
 
 pub mod bus;
+pub mod device;
 pub mod node;
 
 pub use bus::DrmBus;
+pub use device::{BusInfo, DeviceInfo, DrmDevice, PCIBusInfo, PCIDeviceInfo};
 pub use node::{DrmNode, DrmNodeType};
 
 use crate::core::Result;
-use regex::Regex;
 use std::fs::File;
 use std::io::Read;
-
-#[derive(Debug)]
-pub struct PCIBusInfo {
-    domain: u16,
-    bus: u8,
-    dev: u8,
-    func: u8,
-}
-
-impl PCIBusInfo {
-    fn new(pci_slot_name: &str) -> PCIBusInfo {
-        let pci_info_re =
-            Regex::new(r"([0-9a-fA-F]{4}):([0-9a-fA-F]{2}):([0-9a-fA-F]{2}).(\d)").unwrap();
-
-        let caps = pci_info_re.captures(pci_slot_name).unwrap();
-        let domain: u16 = u16::from_str_radix(caps.get(1).unwrap().as_str(), 16).unwrap();
-        let bus: u8 = u8::from_str_radix(caps.get(2).unwrap().as_str(), 16).unwrap();
-        let dev: u8 = u8::from_str_radix(caps.get(3).unwrap().as_str(), 16).unwrap();
-        let func: u8 = caps.get(4).unwrap().as_str().parse().unwrap();
-
-        PCIBusInfo {
-            domain,
-            bus,
-            dev,
-            func,
-        }
-    }
-}
-
-#[derive(Debug)]
-pub enum BusInfo {
-    Pci(PCIBusInfo),
-    Usb,
-    Platform,
-    Host1x,
-}
-
-#[derive(Debug)]
-pub struct PCIDeviceInfo {
-    vendor_id: u16,
-    device_id: u16,
-    revision_id: u8,
-    subvendor_id: u16,
-    subdevice_id: u16,
-}
-
-impl PCIDeviceInfo {
-    fn new(drm_node: &DrmNode) -> PCIDeviceInfo {
-        let config_path = drm_node.get_config_path();
-        let mut buffer = [0; 64];
-        File::open(config_path)
-            .unwrap()
-            .read(&mut buffer[..])
-            .unwrap();
-
-        let vendor_id = buffer[0] as u16 | ((buffer[1] as u16) << 8);
-        let device_id = buffer[2] as u16 | ((buffer[3] as u16) << 8);
-        let revision_id = buffer[8];
-        let subvendor_id = buffer[44] as u16 | ((buffer[45] as u16) << 8);
-        let subdevice_id = buffer[46] as u16 | ((buffer[47] as u16) << 8);
-
-        PCIDeviceInfo {
-            vendor_id,
-            device_id,
-            revision_id,
-            subvendor_id,
-            subdevice_id,
-        }
-    }
-}
-
-#[derive(Debug)]
-pub enum DeviceInfo {
-    Pci(PCIDeviceInfo),
-    Usb,
-    Platform,
-    Host1x,
-}
-
-#[derive(Debug)]
-pub struct DrmDevice {
-    //    nodes: [&str],
-    available_nodes: i32,
-    bus_type: DrmBus,
-    bus_info: BusInfo,
-    device_info: DeviceInfo,
-}
-
-impl DrmDevice {
-    fn new(
-        node_type: DrmNodeType,
-        subsystem_type: DrmBus,
-        bus_info: BusInfo,
-        device_info: DeviceInfo,
-    ) -> DrmDevice {
-        DrmDevice {
-            available_nodes: 1 << (node_type as i32),
-            bus_type: subsystem_type,
-            bus_info,
-            device_info,
-        }
-    }
-}
 
 pub fn get_uevent_data_by_key(pci_path: std::path::PathBuf, entry_key: &str) -> String {
     let uevent_path = pci_path.join("uevent");
@@ -170,7 +68,7 @@ mod tests {
 
     #[test]
     fn process_device_happy_path() {
-        let device = process_device("card0", Some(DrmBus::PCI)).unwrap();
+        let device = process_device("renderD128", Some(DrmBus::PCI)).unwrap();
         dbg!(device);
     }
 }
