@@ -41,13 +41,24 @@ pub enum BusInfo {
     Host1x,
 }
 
-#[derive(Debug)]
 pub struct PCIDeviceInfo {
     vendor_id: u16,
     device_id: u16,
     revision_id: u8,
     subvendor_id: u16,
     subdevice_id: u16,
+}
+
+impl std::fmt::Debug for PCIDeviceInfo {
+    fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
+        fmt.debug_struct("PCIDeviceInfo")
+            .field("vendor_id", &format_args!("0x{:x}", self.vendor_id))
+            .field("device_id", &format_args!("0x{:x}", self.device_id))
+            .field("revision_id", &self.revision_id)
+            .field("subvendor_id", &self.subvendor_id)
+            .field("subdevice_id", &self.subdevice_id)
+            .finish()
+    }
 }
 
 impl PCIDeviceInfo {
